@@ -32,9 +32,8 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
-        # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:unapproved BaseImages/dotnet-asp -f BaseImages/dotnet-asp/Dockerfile
-        docker build -t $ECR_REPOSITORY:unapproved BaseImages/dotnet-asp -f BaseImages/dotnet-asp/Dockerfile 
-        # docker push $ECR_REGISTRY/$ECR_REPOSITORY:unapproved
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:unapproved BaseImages/dotnet-sdk -f BaseImages/dotnet-asp/Dockerfile
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:unapproved
 
     - name: Run Trivy scan
       uses: aquasecurity/trivy-action@master
@@ -42,23 +41,16 @@ jobs:
         image-ref: '${{ env.ECR_REPOSITORY }}:unapproved'
         format: 'sarif'
         output: 'results.sarif'
-        severity: 'CRITICAL,HIGH'
     
     - name: Upload Trivy scan results to GitHub Security tab
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: 'results.sarif'
 
-    
-    # - name: Send Slack Notification
-    #   uses: slackapi/slack-github-action@v1.23.0
-    #   env:
-    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    #   with:
-    #     payload-file-path: "./results.json"
-    
-    # - name: Send Slack Notification
-    #   env:
-    #     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-    #   run: |
-    #     curl -X POST -H 'Content-type: application/json' --data @results.json ${{ env.SLACK_WEBHOOK_URL }}
+    - name: Send Slack Notification
+      uses: slackapi/slack-github-action@v1.15.0
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      with:
+        channel-id: <slackid> # slack id
+        slack-message: "Base Image is awaiting approval. Image scan results will be available on Securities tab on Github"
