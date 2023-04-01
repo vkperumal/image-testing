@@ -32,7 +32,7 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
       run: |
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:unapproved BaseImages/dotnet-sdk -f BaseImages/dotnet-asp/Dockerfile
+        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:unapproved BaseImages/dotnet-sdk -f BaseImages/dotnet-sdk/Dockerfile
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:unapproved
 
     - name: Run Trivy scan
