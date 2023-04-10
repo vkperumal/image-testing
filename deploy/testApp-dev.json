@@ -1,0 +1,78 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "testApp-dev",
+            "image": "imageName",
+            "portMappings": [
+                {
+                    "name": "testApp-dev-80-tcp",
+                    "containerPort": 5075,
+                    "hostPort": 5075,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "environmentFiles": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/testApp-dev",
+                    "awslogs-region": "region",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        },
+        {
+            "environment": [
+              {
+                "name": "NRIA_OVERRIDE_HOST_ROOT",
+                "value": ""
+              },
+              {
+                "name": "NRIA_IS_FORWARD_ONLY",
+                "value": "true"
+              },
+              {
+                "name": "FARGATE",
+                "value": "true"
+              },
+              {
+                "name": "NRIA_PASSTHROUGH_ENVIRONMENT",
+                "value": "ECS_CONTAINER_METADATA_URI,ECS_CONTAINER_METADATA_URI_V4,FARGATE"
+              },
+              {
+                "name": "NRIA_CUSTOM_ATTRIBUTES",
+                "value": "{\"nrDeployMethod\":\"downloadPage\"}"
+              }
+            ],
+            "secrets": [
+              {
+                "valueFrom": "<SYSTEM_MANAGER_LICENSE_PARAMETER_NAME>",
+                "name": "NRIA_LICENSE_KEY"
+              }
+            ],
+            "image": "newrelic/nri-ecs:1.9.9",
+            "name": "newrelic-infra"
+          }
+    ],
+    "family": "testAppDevwithNewRelicAgent",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::<accountid>:role/NewRelicECSTaskExecutionRole",
+    "volumes": [],
+    "placementConstraints": [],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "1024",
+    "memory": "3072",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "tags": []
+}

@@ -1,0 +1,81 @@
+name: Build Dotnet SDK Base Image
+
+on: 
+  # schedule:
+  #   - cron: '30 1 * * 6'
+  workflow_dispatch:
+
+jobs:  
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+    env:
+      ECR_REPOSITORY: testapp-dev
+      NR_APPNAME: testapp-dev
+
+
+    steps:
+
+    - name: Check out code
+      uses: actions/checkout@v2
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    
+    - name: create repository if not exists
+      uses: int128/create-ecr-repository-action@v1
+      with:
+        repository: testapp-dev 
+
+    - name: Build, tag, and push image to Amazon ECR
+      id: build
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build --build-arg NR_KEY=${{ secrets.NEW_RELIC_LICENSE_KEY }} --build-arg NR_APPNAME=$NR_APPNAME -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG testApp -f testApp/Dockerfile
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Send Slack Notification
+      uses: slackapi/slack-github-action@v1.15.0
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      with:
+        channel-id: <slackid> # slack id
+        slack-message: "TestApp Dev build ${{ steps.build.outcome }}"
+
+    - name: Render Amazon ECS task definition
+      id: ecs-dev-container
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ github.sha }}
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: deploy/testApp-dev.json
+        container-name: testApp-dev
+        image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Deploy to Amazon ECS service
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.ecs-dev-container.outputs.task-definition }}
+        service: testApp-dev
+        cluster: dev
+        wait-for-service-stability: true
+    
+    - name: Send Slack Notification
+      uses: slackapi/slack-github-action@v1.15.0
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      with:
+        channel-id: <slackid> # slack id
+        slack-message: "TestApp Dev Deploy ${{ steps.build.outcome }}"
+    

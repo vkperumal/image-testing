@@ -54,3 +54,7 @@ jobs:
       with:
         channel-id: <slackid> # slack id
         slack-message: "Base Image is awaiting approval. Image scan results will be available on Securities tab on Github"
+    
+    - name: Logout of Amazon ECR
+      if: always()
+      run: docker logout ${{ steps.login-ecr.outputs.registry }}
