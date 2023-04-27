@@ -13,7 +13,16 @@
                 }
             ],
             "essential": true,
-            "environment": [],
+            "environment": [
+              {
+                "name": "NEW_RELIC_LICENSE_KEY",
+                "value": ""
+              },
+              {
+                "name": "NEW_RELIC_APP_NAME",
+                "value": "testApp-dev"
+              }
+            ],
             "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
