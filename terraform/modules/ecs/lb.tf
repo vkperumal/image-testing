@@ -8,6 +8,9 @@ data "aws_vpc" "vpc" {
 
 data "aws_subnet_ids" "subnet_list" {
   vpc_id = var.vpc_id
+  tags = {
+    Name = "*${var.subnet_type}*"
+  }
 }
 
 locals {
