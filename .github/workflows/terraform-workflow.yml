@@ -34,7 +34,6 @@ jobs:
         iac_version: 'v14'
         policy_type: 'aws'
         only_warn: true
-        iac_dir: terraform/modules
 
     # - name: Setup Terraform with specified version on the runner
     #   uses: hashicorp/setup-terraform@v2
